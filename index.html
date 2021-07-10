@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/css/flag-icon.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+
+    <link rel="stylesheet" href="styles/style.css">
+
+    <title>Boolflix</title>
+</head>
+<body>
+    <div id="app" class="main-container">
+
+        <header>
+            <div class="header-container">
+                <div class="logo-container">
+                    <a href="#">
+                        <img src="img/boolflix-logo.png" alt="logo Boolflix">
+                    </a>
+                </div>
+              
+                <div class="input-container">
+                    <div class="input-style" :class="{'bold-border': inputFocus}">
+                        <input type="text"
+                        placeholder="Search for Movies & TV Shows..." 
+                        v-model="userSearch"
+                        @keyup.enter="onSearchClick()"
+                        @focus="inputFocus = true"
+                        @focusout="inputFocus = false">
+                        
+                        <i class="fas fa-search"
+                        @click="onSearchClick()"></i>
+                    </div>
+                </div>
+    
+                <div class="personal-profile">
+                    <a href="#" class="xs-hidden">
+                        KIDS
+                    </a>
+                    <a href="#">
+                        <i class="fas fa-bell"></i>
+                        <span class="alert">5</span>
+                    </a>
+                    <a href="#">
+                        <div class="profile-img-container">
+                            <img src="img/netflix-profile.jpg" alt="profile picture">
+                        </div>
+                        <i class="fas fa-sort-down xs-hidden"></i>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <div v-if="moviesTVList.length > 0">
+                <h5 class="user-search"> Hai cercato "{{ currentSearch }}" </h5>
+
+                <div class="genre-filter">
+                    <label for="movies-genres">
+                        Filtra i risultati per genere
+                    </label>
+                    <div class="select">
+                        <select name="" id="movies-genres" style="background-color: #141414;"
+                        v-model="userSelectedGenre">
+                            
+                            <option value="">Tutti i generi</option>
+                            <option :value="genre"
+                            v-for="genre in genresToSelect">
+                                {{genre}}
+                            </option>
+                        </select>
+                        <span class="focus"></span>
+                    </div>
+                </div>
+
+
+                <div class="row" >
+                    <ul class="search-movie-container">
+
+                        <li v-for="(movie, index) in filteredMoviesList"> 
+                            <div class="poster-container">
+
+                                <div class="img-container">
+                                    <img :src="addPoster(movie)" alt="poster movie">
+                                    
+                                    <div class="movie-logo-label">
+                                        <span v-if="movie.isMovie">
+                                            FILM
+                                        </span>
+                                        <span v-else>
+                                            SERIE TV
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="overlay">
+                                    <div class="info-block">
+                                        <div class="upper-info">
+                                            <div>
+                                                <span>Titolo</span>
+                                                <h4>{{movie.title}}</h4>
+                                            </div>
+    
+                                            <div v-if="!checkIfSame(movie)">
+                                                <span>Titolo originale</span>
+                                                <h4>{{movie.original_title}}</h4>
+                                            </div>
+    
+                                            <div>
+                                                <h4 class="inline">
+                                                    Lingua originale
+                                                </h4>
+                                                <span class="flag-icon flag-icon-squared" 
+                                                :class="'flag-icon-' + getFlagIcon(movie)">
+                                                </span> 
+                                            </div>
+    
+                                            <div>
+                                                <h4 class="inline">
+                                                    Voto  
+                                                </h4>
+                                                <i class="fas fa-star" 
+                                                v-for="(star, starIndex) in 5"
+                                                :class="addStars(movie, starIndex)"></i>
+                                            </div>
+
+                                            <div v-if="movie.genre_ids.length != 0">
+                                                <h4>Genere</h4>
+                                                <p>
+                                                    {{ printGenres(movie) }}
+                                                </p>
+                                            </div>
+
+                                            <div>
+                                                <button class="text-button"
+                                                v-if="!movie.cast"
+                                                @click="getActors(movie)">
+                                                    ...vedi cast
+                                                </button>
+                                                <div v-else-if="movie.cast.length != 0">
+                                                    <h4>Cast</h4>
+                                                    <span class="inline cast-member">
+                                                        {{ printCast(movie.cast) }}
+                                                    </span>
+                                                </div>
+                                                <span v-else>
+                                                    Cast non disponibile.
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div v-if="movie.overview">
+                                            <h4>Riassunto</h4>
+                                            <div class="overview-box">
+                                                <p> {{movie.overview}} </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </li>
+
+                    </ul>
+                </div>
+            </div>
+            <div class="spinner-container"
+            v-else-if="searchingForQuery > 0">
+                <div class="lds-default">
+                    
+                </div>
+            </div>
+            <div v-else-if="moviesTVList.length == 0">  
+                <h1 style="margin-top: 50vh; text-align: center;"><strong>{{ errorMsg }}</strong></h1>
+            </div>
+        </main>
+        
+
+
+    </div>
+
+    <script src="scripts/app.js"></script>
+</body>
+</html>
